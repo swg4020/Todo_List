@@ -1,3 +1,4 @@
+import { DeleteIcon } from "@chakra-ui/icons";
 import {
   Box,
   Container,
@@ -5,8 +6,17 @@ import {
   Input,
   VStack,
   Checkbox,
+  Flex,
+  useDisclosure,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
+  Button,
 } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 
 function App() {
@@ -16,6 +26,9 @@ function App() {
     return getTodo ? JSON.parse(getTodo) : [];
     //JSON.parse(getTodo) 제이슨 파일을 자바스크립트로 바꿔준다.
   });
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const cancelRef = useRef();
+  const [currentID, setCurrentID] = useState();
 
   const {
     register,
@@ -47,6 +60,10 @@ function App() {
         data.id === id ? { ...data, finish: !data.finish } : data
       )
     );
+  };
+
+  const onClickDelete = (id) => {
+    setTodos(todos.filter((todo) => todo.id !== id));
   };
 
   useEffect(() => {
@@ -90,12 +107,48 @@ function App() {
             size={"lg"}
             isChecked={data.finish}
             onChange={() => onChangeCheck(data.id)}
-            //이벤트를 줄경우는 온체인지
+            //onChange 이벤트를 줄경우는 온체인지
           >
-            <Box>{data.text}</Box>
+            <Flex>
+              <Box>{data.text}</Box>
+              <DeleteIcon
+                onClick={() => {
+                  onOpen();
+                  //연결된 창을 열어주는 것으로 onOpen 과 isOpen은 서로 같이 써줘야함.
+                  setCurrentID(data.id);
+                  // 현재의 아이디값을 넘겨줌으로써 어떤것인지를 알려줌.
+                }}
+              />
+              {/* 이벤트를 줘서 오픈하게 만들어줌 */}
+            </Flex>
           </Checkbox>
         ))}
       </VStack>
+
+      <AlertDialog isOpen={isOpen}>
+        {/* 열릴 것에는 isOpen */}
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader>삭제 확인</AlertDialogHeader>
+
+            <AlertDialogBody>정말 삭제하시겠습니까?</AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onClose}>
+                취소
+              </Button>
+              <Button
+                onClick={() => {
+                  onClickDelete(currentID);
+                  onClose();
+                  //onClose는 닫기이다.
+                }}
+              >
+                삭제
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Container>
   );
 }
